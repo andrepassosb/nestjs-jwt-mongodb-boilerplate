@@ -24,8 +24,13 @@ export class AuthService {
       password: hashedPassword,
     };
 
-    const createdUser = this.userModel.create(payload);
-    return createdUser;
+    const createdUser = await this.userModel.create(payload);
+    const result = {
+      id: createdUser._id,
+      name: createdUser.name,
+      email: createdUser.email,
+    };
+    return result;
   }
 
   login(loginDto: LoginDto) {
