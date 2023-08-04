@@ -1,9 +1,18 @@
-import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  HttpCode,
+  HttpStatus,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register-auth.dto';
 import { LoginDto } from './dto/login-auth.dto';
 import { ChangePasswordDto } from './dto/change-password-auth.dto';
-import { GetCurrentUserId, Public } from '../common/decorators';
+import { GetCurrentUser, GetCurrentUserId, Public } from '../common/decorators';
+import { RtGuard } from 'src/common/guards';
+import { Tokens } from './types';
 
 @Controller('auth')
 export class AuthController {
@@ -34,5 +43,16 @@ export class AuthController {
     @Body() changePasswordDto: ChangePasswordDto,
   ) {
     return this.authService.changePassword(userId, changePasswordDto);
+  }
+
+  @Public()
+  @UseGuards(RtGuard)
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  refreshTokens(
+    @GetCurrentUserId() userId: number,
+    @GetCurrentUser('refreshToken') refreshToken: string,
+  ): Promise<Tokens> {
+    return this.authService.refreshTokens(userId, refreshToken);
   }
 }
