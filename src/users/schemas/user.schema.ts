@@ -10,8 +10,12 @@ export class User {
   @Prop({ required: true, unique: true })
   email: string;
 
-  @Prop({ required: true })
+  @Prop({ required: false })
   password: string;
+
+  @Prop({ required: true })
+  rtHash: string;
+
   @Prop({ default: Date.now })
   createdDate: Date;
 

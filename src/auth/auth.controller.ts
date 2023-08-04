@@ -3,12 +3,13 @@ import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register-auth.dto';
 import { LoginDto } from './dto/login-auth.dto';
 import { ChangePasswordDto } from './dto/change-password-auth.dto';
-import { Public } from '../common/decorators';
+import { GetCurrentUserId, Public } from '../common/decorators';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @Public()
   @Post('register')
   async create(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
@@ -21,8 +22,17 @@ export class AuthController {
     return this.authService.login(loginDto);
   }
 
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  async logout(@GetCurrentUserId() userId: string) {
+    return this.authService.logout(userId);
+  }
+
   @Post('change-password')
-  async changePassword(@Body() changePasswordDto: ChangePasswordDto) {
-    return this.authService.changePassword(changePasswordDto);
+  async changePassword(
+    @GetCurrentUserId() userId: string,
+    @Body() changePasswordDto: ChangePasswordDto,
+  ) {
+    return this.authService.changePassword(userId, changePasswordDto);
   }
 }

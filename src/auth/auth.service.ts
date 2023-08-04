@@ -24,11 +24,12 @@ export class AuthService {
     private config: ConfigService,
   ) {}
 
+  saltRounds = 10;
+
   async register(body: RegisterDto) {
     // Hashed password
     const password = body.password;
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    const hashedPassword = await bcrypt.hash(password, this.saltRounds);
 
     // Create Payload
     const payload: IUserPayload = {
@@ -46,10 +47,6 @@ export class AuthService {
     return result;
   }
 
-  // login(loginDto: LoginDto) {
-  //   return 'This action adds a new auth';
-  // }
-
   async login(body: LoginDto): Promise<Tokens> {
     const user = await this.userModel.findOne({ email: body.email });
 
@@ -64,13 +61,22 @@ export class AuthService {
     }
 
     const tokens = await this.getTokens(user.id, user.email);
-    // await this.updateRtHash(user.id, tokens.refresh_token);
+    await this.updateRtHash(user.id, tokens.refresh_token);
 
     return tokens;
   }
 
-  changePassword(changePasswordDto: ChangePasswordDto) {
-    return 'This action adds a new auth';
+  async logout(userId: string): Promise<boolean> {
+    await this.updateRtHash(userId, null);
+    return true;
+  }
+
+  async changePassword(userId: string, body: ChangePasswordDto) {
+    const passwordHash = await bcrypt.hash(body.password, this.saltRounds);
+    await this.userModel.updateOne({ _id: userId }, { password: passwordHash });
+    return {
+      message: 'Password changed successfully',
+    };
   }
 
   async getTokens(userId: number, email: string): Promise<Tokens> {
@@ -96,15 +102,21 @@ export class AuthService {
     };
   }
 
-  // async updateRtHash(userId: number, rt: string): Promise<void> {
-  //   const hash = await argon.hash(rt);
-  //   await this.prisma.user.update({
-  //     where: {
-  //       id: userId,
-  //     },
-  //     data: {
-  //       hashedRt: hash,
-  //     },
-  //   });
-  // }
+  async refreshTokens(userId: number, rt: string): Promise<Tokens> {
+    const user = await this.userModel.findById(userId);
+    if (!user || !user.rtHash) throw new ForbiddenException('Access Denied');
+
+    const rtMatches = await bcrypt.compare(rt, user.rtHash);
+    if (!rtMatches) throw new ForbiddenException('Access Denied');
+
+    const tokens = await this.getTokens(user.id, user.email);
+    await this.updateRtHash(user.id, tokens.refresh_token);
+
+    return tokens;
+  }
+
+  async updateRtHash(userId: string, rt: string): Promise<void> {
+    const rtHash = rt ? await bcrypt.hash(rt, this.saltRounds) : null;
+    await this.userModel.updateOne({ _id: userId }, { rtHash: rtHash });
+  }
 }
