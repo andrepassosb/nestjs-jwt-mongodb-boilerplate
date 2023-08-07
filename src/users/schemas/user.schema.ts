@@ -16,6 +16,9 @@ export class User {
   @Prop({ required: true })
   rtHash: string;
 
+  @Prop({ required: true })
+  rtIat: number;
+
   @Prop({ default: Date.now })
   createdDate: Date;
 

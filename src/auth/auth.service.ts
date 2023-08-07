@@ -109,6 +109,11 @@ export class AuthService {
     const rtMatches = await bcrypt.compare(rt, user.rtHash);
     if (!rtMatches) throw new ForbiddenException('Access Denied');
 
+    // compare date created refresh token with date created token
+    const iatRt = this.jwtService.decode(rt)['iat'];
+    const iatToken = user.rtIat;
+    if (iatRt < iatToken) throw new ForbiddenException('Access Denied');
+
     const tokens = await this.getTokens(user.id, user.email);
     await this.updateRtHash(user.id, tokens.refresh_token);
 
@@ -117,6 +122,10 @@ export class AuthService {
 
   async updateRtHash(userId: string, rt: string): Promise<void> {
     const rtHash = rt ? await bcrypt.hash(rt, this.saltRounds) : null;
-    await this.userModel.updateOne({ _id: userId }, { rtHash: rtHash });
+    const rtIat = this.jwtService.decode(rt)['iat'];
+    await this.userModel.updateOne(
+      { _id: userId },
+      { rtHash: rtHash, rtIat: rtIat },
+    );
   }
 }
