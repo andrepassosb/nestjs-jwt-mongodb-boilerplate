@@ -2,7 +2,9 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
 
 export type UserDocument = HydratedDocument<User>;
-@Schema()
+@Schema({
+  timestamps: true,
+})
 export class User {
   @Prop({ required: true })
   name: string;
@@ -13,17 +15,11 @@ export class User {
   @Prop({ required: false })
   password: string;
 
-  @Prop({ required: true })
-  rtHash: string;
+  @Prop({ required: false })
+  refreshTokenHash: string;
 
-  @Prop({ required: true })
-  rtIat: number;
-
-  @Prop({ default: Date.now })
-  createdDate: Date;
-
-  @Prop({ default: Date.now })
-  updatedDate: Date;
+  @Prop({ required: false })
+  refreshTokenIat: number;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

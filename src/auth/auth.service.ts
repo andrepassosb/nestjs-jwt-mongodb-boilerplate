@@ -104,14 +104,15 @@ export class AuthService {
 
   async refreshTokens(userId: number, rt: string): Promise<Tokens> {
     const user = await this.userModel.findById(userId);
-    if (!user || !user.rtHash) throw new ForbiddenException('Access Denied');
+    if (!user || !user.refreshTokenHash)
+      throw new ForbiddenException('Access Denied');
 
-    const rtMatches = await bcrypt.compare(rt, user.rtHash);
+    const rtMatches = await bcrypt.compare(rt, user.refreshTokenHash);
     if (!rtMatches) throw new ForbiddenException('Access Denied');
 
     // compare date created refresh token with date created token
     const iatRt = this.jwtService.decode(rt)['iat'];
-    const iatToken = user.rtIat;
+    const iatToken = user.refreshTokenIat;
     if (iatRt < iatToken) throw new ForbiddenException('Access Denied');
 
     const tokens = await this.getTokens(user.id, user.email);
@@ -121,11 +122,18 @@ export class AuthService {
   }
 
   async updateRtHash(userId: string, rt: string): Promise<void> {
-    const rtHash = rt ? await bcrypt.hash(rt, this.saltRounds) : null;
+    if (!rt) {
+      await this.userModel.updateOne(
+        { _id: userId },
+        { refreshTokenHash: null, refreshTokenIat: null },
+      );
+      return;
+    }
+    const rtHash = await bcrypt.hash(rt, this.saltRounds);
     const rtIat = this.jwtService.decode(rt)['iat'];
     await this.userModel.updateOne(
       { _id: userId },
-      { rtHash: rtHash, rtIat: rtIat },
+      { refreshTokenHash: rtHash, refreshTokenIat: rtIat },
     );
   }
 }
