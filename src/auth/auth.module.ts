@@ -4,11 +4,21 @@ import { AuthController } from './auth.controller';
 import { DatabaseModule } from '../database/database.module';
 import { usersProviders } from '../users/users.providers';
 import { JwtModule } from '@nestjs/jwt';
-import { AtStrategy, RtStrategy } from './strategies';
+import { APP_GUARD } from '@nestjs/core';
+import { AuthGuard } from 'src/common/guards/auth.guard';
+import { RtStrategy } from './strategies/rt.strategy';
 
 @Module({
   imports: [DatabaseModule, JwtModule.register({})],
   controllers: [AuthController],
-  providers: [AuthService, AtStrategy, RtStrategy, ...usersProviders],
+  providers: [
+    AuthService,
+    RtStrategy,
+    ...usersProviders,
+    {
+      provide: APP_GUARD,
+      useClass: AuthGuard,
+    },
+  ],
 })
 export class AuthModule {}

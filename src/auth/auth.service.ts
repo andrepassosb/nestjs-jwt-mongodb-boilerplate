@@ -15,7 +15,6 @@ import { IUserPayload } from '../users/interfaces/user.interface';
 import { JwtPayload, Tokens } from './types';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-
 @Injectable()
 export class AuthService {
   constructor(
@@ -87,11 +86,11 @@ export class AuthService {
 
     const [at, rt] = await Promise.all([
       this.jwtService.signAsync(jwtPayload, {
-        secret: this.config.get<string>('AT_SECRET'),
+        secret: this.config.get<string>('JWT_SECRET_KEY'),
         expiresIn: '15m',
       }),
       this.jwtService.signAsync(jwtPayload, {
-        secret: this.config.get<string>('RT_SECRET'),
+        secret: this.config.get<string>('REFRESH_TOKEN_SECRET_KEY'),
         expiresIn: '7d',
       }),
     ]);

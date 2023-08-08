@@ -11,8 +11,8 @@ import { RegisterDto } from './dto/register-auth.dto';
 import { LoginDto } from './dto/login-auth.dto';
 import { ChangePasswordDto } from './dto/change-password-auth.dto';
 import { GetCurrentUser, GetCurrentUserId, Public } from '../common/decorators';
-import { RtGuard } from 'src/common/guards';
 import { Tokens } from './types';
+import { RtGuard } from 'src/common/guards/rt.guard';
 
 @Controller('auth')
 export class AuthController {
